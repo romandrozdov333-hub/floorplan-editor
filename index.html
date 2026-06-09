@@ -1491,6 +1491,7 @@ function renderGroup(group) {
   lg.setAttribute("id", group.id + "-label");
   lg.setAttribute("class", "label-group group-label");
   lg.style.cursor = "move";
+  lg.style.pointerEvents = "all";
 
   const lbg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
   lbg.setAttribute("x", group.lx);
@@ -1503,6 +1504,7 @@ function renderGroup(group) {
   lbg.setAttribute("stroke-opacity", 0.95);
   lbg.setAttribute("stroke-width", "2");
   lbg.setAttribute("rx", 3);
+  lbg.style.pointerEvents = "all";
   lg.appendChild(lbg);
 
   // Dot indicator showing multiple zones
