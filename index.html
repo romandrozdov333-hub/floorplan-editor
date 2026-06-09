@@ -589,10 +589,12 @@
   </div>
 
   <div class="toolbar-section">
-    <button class="btn" onclick="exportData()">📥 Експорт JSON</button>
-    <button class="btn primary" onclick="exportImage()">🖼 Зберегти PNG</button>
-    <button class="btn primary" onclick="exportPDF()" style="background:#1a6b3c;border-color:#1a6b3c">📄 Зберегти PDF</button>
-    <button class="btn" onclick="document.getElementById('pdf-file-input').click()">📂 Інший план</button>
+    <button class="btn" style="background:#0d5c2e;border-color:#0d7337;color:#fff" onclick="saveProject()">💾 Зберегти проект</button>
+    <button class="btn" onclick="document.getElementById('load-project-input').click()">📂 Завантажити проект</button>
+    <input type="file" id="load-project-input" accept=".json" style="display:none" onchange="loadProject(event)">
+    <button class="btn primary" onclick="exportImage()">🖼 PNG</button>
+    <button class="btn primary" onclick="exportPDF()" style="background:#1a6b3c;border-color:#1a6b3c">📄 PDF</button>
+    <button class="btn" onclick="document.getElementById('pdf-file-input').click()">📋 Інший план</button>
   </div>
 </div>
 
@@ -1580,13 +1582,99 @@ function selectGroup(gid) {
 // ============================================================
 // EXPORT
 // ============================================================
-function exportData() {
-  const data = JSON.stringify(zones, null, 2);
+function saveProject() {
+  // Save floor plan image as base64 + all zones + groups
+  const img = document.getElementById("floor-img");
+  const project = {
+    version: 2,
+    savedAt: new Date().toISOString(),
+    imgSrc: img.src,           // base64 or URL of current plan
+    imgW: imgNatW,
+    imgH: imgNatH,
+    zones: zones,
+    groups: groups
+  };
+  const data = JSON.stringify(project);
   const blob = new Blob([data], {type: "application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "floorplan_zones.json";
+  // Suggest filename with date
+  const d = new Date();
+  const dateStr = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  a.download = `floorplan_project_${dateStr}.json`;
   a.click();
+}
+
+function loadProject(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const project = JSON.parse(ev.target.result);
+
+      // Clear current state
+      zones = [];
+      groups = [];
+      selectedZoneId = null;
+      selectedGroupId = null;
+      selectedZoneIds = [];
+      // Clear SVG
+      const svg = document.getElementById("overlay-svg");
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+      // Restore zones & groups
+      zones = project.zones || [];
+      groups = project.groups || [];
+
+      // Load plan image
+      if (project.imgSrc) {
+        loadImageToCanvas(project.imgSrc);
+        // Wait for image to load then render zones/groups
+        document.getElementById("floor-img").onload = function() {
+          imgNatW = project.imgW || this.naturalWidth;
+          imgNatH = project.imgH || this.naturalHeight;
+          const svg = document.getElementById("overlay-svg");
+          svg.setAttribute("width", imgNatW);
+          svg.setAttribute("height", imgNatH);
+          svg.setAttribute("viewBox", `0 0 ${imgNatW} ${imgNatH}`);
+          fitToWindow();
+          _renderAll();
+        };
+      } else {
+        _renderAll();
+      }
+
+      document.getElementById("upload-overlay").style.display = "none";
+    } catch(err) {
+      alert("Помилка завантаження проекту: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+  // Reset input so same file can be loaded again
+  e.target.value = "";
+}
+
+function _renderAll() {
+  // Re-render all zones (ungrouped ones get individual labels)
+  const groupedIds = new Set(groups.flatMap(g => g.zoneIds));
+  zones.forEach(zone => {
+    renderZone(zone);
+    // If zone is in a group, remove its individual label (group label will be drawn)
+    if (groupedIds.has(zone.id)) {
+      const lbl = document.getElementById(zone.id + "-label");
+      if (lbl) lbl.remove();
+      const ln = document.getElementById(zone.id + "-line");
+      if (ln) ln.remove();
+    }
+  });
+  // Re-render all groups
+  groups.forEach(group => renderGroup(group));
+  renderSidebar();
+}
+
+function exportData() {
+  saveProject();
 }
 
 function exportImage() {
