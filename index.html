@@ -819,6 +819,8 @@ function getSVGCoords(e) {
 
 svg.addEventListener("mousedown", (e) => {
   if (e.target.closest(".zone-rect")) return; // clicking existing zone
+  if (e.target.closest(".label-group")) return; // clicking label
+  if (e.shiftKey) return; // shift = multi-select mode, not drawing
   if (e.button !== 0) return;
   
   const coords = getSVGCoords(e);
@@ -1875,6 +1877,7 @@ let dragState = null;
 
 svg.addEventListener("mousedown", (e) => {
   if (isDrawing) return;
+  if (e.shiftKey) return; // let click handle multi-select
 
   // Check if clicking a label
   const lg = e.target.closest(".label-group");
