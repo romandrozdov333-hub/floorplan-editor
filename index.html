@@ -1934,8 +1934,6 @@ svg.addEventListener("mousedown", (e) => {
 svg.addEventListener("mousemove", (e) => {
   if (!dragState || isDrawing) return;
   const coords = getSVGCoords(e);
-  const zone = zones.find(z => z.id === dragState.zoneId);
-  if (!zone) return;
 
   const dx = coords.x - dragState.startX;
   const dy = coords.y - dragState.startY;
@@ -1947,7 +1945,12 @@ svg.addEventListener("mousemove", (e) => {
     group.ly = dragState.origLy + dy;
     refreshGroupLabel(group);
     return;
-  } else if (dragState.type === "label") {
+  }
+
+  const zone = zones.find(z => z.id === dragState.zoneId);
+  if (!zone) return;
+
+  if (dragState.type === "label") {
     zone.lx = dragState.origLx + dx;
     zone.ly = dragState.origLy + dy;
     // Only refresh label
