@@ -114,15 +114,16 @@
   /* CANVAS AREA */
   #canvas-wrapper {
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
     position: relative;
     background: #111827;
     cursor: crosshair;
   }
 
   #canvas-container {
-    position: relative;
-    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: 0;
     transform-origin: top left;
   }
 
@@ -148,13 +149,29 @@
 
   /* SIDEBAR */
   #sidebar {
-    width: 260px;
+    width: 280px;
+    min-width: 180px;
+    max-width: 600px;
     background: #16213e;
     border-left: 1px solid #0f3460;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     flex-shrink: 0;
+    position: relative;
+    height: 100%;
+  }
+  #sidebar-resizer {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+    cursor: ew-resize;
+    background: transparent;
+    z-index: 10;
+    transition: background 0.15s;
+  }
+  #sidebar-resizer:hover, #sidebar-resizer.dragging {
+    background: #4fc3f7;
   }
 
   #sidebar-header {
@@ -229,6 +246,9 @@
     padding: 12px;
     border-top: 1px solid #0f3460;
     background: #0d1b36;
+    overflow-y: auto;
+    flex: 0 0 auto;
+    min-height: 40px;
   }
   #properties-panel h3 {
     font-size: 12px;
@@ -236,7 +256,18 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
+  #properties-panel h3::after {
+    content: "▼";
+    font-size: 10px;
+    color: #6272a4;
+  }
+  #properties-panel.collapsed h3::after { content: "▶"; }
+  #properties-panel.collapsed .prop-row { display: none; }
   .prop-row {
     margin-bottom: 8px;
   }
@@ -401,8 +432,9 @@
   #summary-section {
     border-top: 1px solid #0f3460;
     flex-shrink: 0;
-    max-height: 260px;
-    overflow-y: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
   #summary-header {
     padding: 8px 14px;
@@ -415,9 +447,36 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
+    user-select: none;
   }
   #summary-header:hover { background: #0f2044; }
-  #summary-table-wrap { padding: 0 8px 8px; }
+  #summary-table-wrap {
+    padding: 0 8px 8px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  /* Resizable panel handle */
+  .panel-resizer {
+    height: 8px;
+    cursor: ns-resize;
+    background: #0f3460;
+    flex-shrink: 0;
+    pointer-events: all !important;
+    z-index: 20;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .panel-resizer::after {
+    content: "⋯";
+    color: #4fc3f7;
+    font-size: 14px;
+    line-height: 1;
+    letter-spacing: 2px;
+  }
+  .panel-resizer:hover, .panel-resizer.dragging { background: #1a4a7a; }
   .sum-table {
     width: 100%;
     border-collapse: collapse;
@@ -488,6 +547,113 @@
   .btn.success { background: #0d5c2e; border-color: #0d7337; color: #fff; }
   .btn.success:hover { background: #0a4a25; }
 
+
+  /* Group info modal */
+  #group-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+  }
+  #group-modal-overlay.visible {
+    display: flex;
+  }
+  #group-modal {
+    background: #16213e;
+    border: 1px solid #1a4a7a;
+    border-radius: 12px;
+    padding: 24px 28px;
+    min-width: 320px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  #group-modal h2 {
+    font-size: 15px;
+    color: #cdd6f4;
+    margin-bottom: 16px;
+    font-weight: 700;
+  }
+  .modal-row {
+    margin-bottom: 12px;
+  }
+  .modal-label {
+    font-size: 11px;
+    color: #6272a4;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .modal-input {
+    width: 100%;
+    background: #0f3460;
+    border: 1px solid #1a4a7a;
+    border-radius: 6px;
+    padding: 7px 10px;
+    color: #e0e0e0;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .modal-input:focus { border-color: #4fc3f7; }
+  .modal-radio-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .modal-radio-row label {
+    font-size: 13px;
+    color: #e0e0e0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .modal-zone-count {
+    font-size: 12px;
+    color: #4fc3f7;
+    margin-bottom: 14px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    justify-content: flex-end;
+  }
+  .modal-color-row {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .modal-swatch {
+    width: 26px; height: 26px;
+    border-radius: 5px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.1s;
+  }
+  .modal-swatch:hover { transform: scale(1.15); }
+  .modal-swatch.active { border-color: #fff; }
+
+
+  /* Resize handles */
+  .resize-handle {
+    fill: #ffffff;
+    stroke: #4fc3f7;
+    stroke-width: 1.5;
+    pointer-events: all !important;
+  }
+  .resize-handle.edge-n, .resize-handle.edge-s { cursor: ns-resize; }
+  .resize-handle.edge-e, .resize-handle.edge-w { cursor: ew-resize; }
+  .resize-handle.corner-nw, .resize-handle.corner-se { cursor: nwse-resize; }
+  .resize-handle.corner-ne, .resize-handle.corner-sw { cursor: nesw-resize; }
+  .resize-handle:hover { fill: #4fc3f7; }
+
+
 </style>
 </head>
 <body>
@@ -526,53 +692,11 @@
     <span id="opacity-value" style="font-size:12px;color:#8892b0;min-width:28px">45%</span>
   </div>
 
-  <div class="toolbar-section">
-    <span class="toolbar-label">Бренд</span>
-    <input type="text" id="brand-input" class="input-field" placeholder="Adidas" style="width:110px" list="brand-suggestions">
-    <datalist id="brand-suggestions">
-      <option value="Adidas">
-      <option value="Nike">
-      <option value="Puma">
-      <option value="New Balance">
-      <option value="Columbia">
-      <option value="Reebok">
-      <option value="Skechers">
-      <option value="Camel">
-      <option value="Kaytrі">
-      <option value="Salomon">
-      <option value="Hoka">
-      <option value="The North Face">
-      <option value="Jack Wolfskin">
-    </datalist>
-  </div>
+  <input type="hidden" id="brand-input" value="">
+  <input type="hidden" id="sku-input" value="0">
 
-  <div class="toolbar-section">
-    <span class="toolbar-label">Арт.</span>
-    <input type="number" id="sku-input" class="input-field" placeholder="24" style="width:70px" min="1">
-  </div>
-
-  <div class="toolbar-section">
-    <span class="toolbar-label">Тип</span>
-    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;color:#e0e0e0">
-      <input type="radio" name="zone-type" value="S" id="type-S" checked style="accent-color:#4fc3f7"> 👟 Shoes
-    </label>
-    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;color:#e0e0e0">
-      <input type="radio" name="zone-type" value="A" id="type-A" style="accent-color:#c678dd"> 👕 Apparel
-    </label>
-  </div>
-
-  <div class="toolbar-section">
-    <span class="toolbar-label">Стать</span>
-    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;color:#e0e0e0">
-      <input type="radio" name="zone-gender" value="M" id="gender-M" checked style="accent-color:#98c379"> M
-    </label>
-    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;color:#e0e0e0">
-      <input type="radio" name="zone-gender" value="W" id="gender-W" style="accent-color:#e06c75"> W
-    </label>
-    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;color:#e0e0e0">
-      <input type="radio" name="zone-gender" value="MW" id="gender-MW" style="accent-color:#4fc3f7"> M+W
-    </label>
-  </div>
+  <input type="hidden" id="type-S" value="S">
+  <input type="hidden" id="gender-M" value="M">
 
   <div class="toolbar-section">
     <div id="mode-indicator">
@@ -609,17 +733,20 @@
   </div>
 
   <div id="sidebar">
+    <div id="sidebar-resizer" title="Тягніть щоб змінити ширину"></div>
     <div id="sidebar-header">Зони <span id="zone-count" style="color:#4fc3f7">0</span></div>
-    <div id="zones-list-wrap" style="flex:1;overflow-y:auto;">
+    <div id="zones-list-wrap" style="flex:1;overflow-y:auto;min-height:40px;max-height:none;">
       <div id="zones-list"></div>
     </div>
-    <div id="summary-section">
+    <div class="panel-resizer" id="summary-resizer" title="Тягніть щоб змінити висоту зведеної таблиці"></div>
+    <div id="summary-section" style="flex-shrink:0;min-height:32px;display:flex;flex-direction:column;overflow:hidden;">
       <div id="summary-header" onclick="toggleSummary()">
         <span>Зведена таблиця</span>
         <span id="summary-toggle">▼</span>
       </div>
-      <div id="summary-table-wrap" style="display:none"></div>
+      <div id="summary-table-wrap" style="display:none;overflow-y:auto;"></div>
     </div>
+    <div class="panel-resizer" id="props-resizer" title="Тягніть щоб змінити висоту"></div>
     <div id="properties-panel" style="display:none">
       <h3>Властивості зони</h3>
       <div class="prop-row">
@@ -772,16 +899,24 @@ function resetZoom() {
 
 function fitToWindow() {
   const wrapper = document.getElementById("canvas-wrapper");
-  const ww = wrapper.clientWidth - 20;
-  const wh = wrapper.clientHeight - 20;
+  const ww = wrapper.clientWidth - 4;
+  const wh = wrapper.clientHeight - 4;
   const sx = ww / imgNatW;
   const sy = wh / imgNatH;
-  currentScale = Math.min(sx, sy);
+  currentScale = Math.max(sx, sy); // use max to fill entire area
   applyScale();
 }
 
 function applyScale() {
-  document.getElementById("canvas-container").style.transform = `scale(${currentScale})`;
+  const container = document.getElementById("canvas-container");
+  const wrapper = document.getElementById("canvas-wrapper");
+  container.style.transform = `scale(${currentScale})`;
+  // Set wrapper scroll size to match scaled content
+  const scaledW = Math.round(imgNatW * currentScale);
+  const scaledH = Math.round(imgNatH * currentScale);
+  container.style.width = imgNatW + "px";
+  container.style.height = imgNatH + "px";
+  wrapper.style.overflow = scaledW > wrapper.clientWidth || scaledH > wrapper.clientHeight ? "auto" : "hidden";
   document.getElementById("zoom-label").textContent = Math.round(currentScale * 100) + "%";
 }
 
@@ -811,6 +946,16 @@ const svg = document.getElementById("overlay-svg");
 let tempRect = null;
 
 function getSVGCoords(e) {
+  const img = document.getElementById("floor-img");
+  const rect = img.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) / currentScale,
+    y: (e.clientY - rect.top) / currentScale
+  };
+}
+
+// SVG coords specifically for window-level events (used in resize)
+function getWindowSVGCoords(e) {
   const img = document.getElementById("floor-img");
   const rect = img.getBoundingClientRect();
   return {
@@ -871,13 +1016,6 @@ svg.addEventListener("mouseup", (e) => {
   
   if (w < 10 || h < 10) return; // too small
   
-  const rawBrand = document.getElementById("brand-input").value.trim();
-  const parsed = parseBrandInput(rawBrand);
-  const brand = parsed.brand || "Бренд";
-  const sku = parseInt(document.getElementById("sku-input").value) || 0;
-  const ztype = parsed.type || document.querySelector('input[name="zone-type"]:checked')?.value || "S";
-  const gender = parsed.gender || document.querySelector('input[name="zone-gender"]:checked')?.value || "M";
-  
   const zone = {
     id: "z" + Date.now(),
     x: Math.min(coords.x, drawStart.x),
@@ -885,10 +1023,10 @@ svg.addEventListener("mouseup", (e) => {
     w, h,
     color: currentColor,
     opacity: currentOpacity,
-    brand,
-    sku,
-    ztype,
-    gender
+    brand: "",
+    sku: 0,
+    ztype: "S",
+    gender: "M"
   };
   
   zones.push(zone);
@@ -1035,17 +1173,22 @@ function removeZoneFromSVG(id) {
   if (lbl) lbl.remove();
   const ln = document.getElementById(id + "-line");
   if (ln) ln.remove();
+  removeResizeHandles(id);
 }
 
 function refreshZone(zone) {
   removeZoneFromSVG(zone.id);
   renderZone(zone);
+  if (selectedZoneId === zone.id) renderResizeHandles(zone);
 }
 
 // ============================================================
 // SELECTION
 // ============================================================
 function selectZone(id) {
+  // Remove handles from previously selected zone
+  if (selectedZoneId && selectedZoneId !== id) removeResizeHandles(selectedZoneId);
+
   selectedZoneId = id;
   
   // Update SVG selection styling
@@ -1066,12 +1209,18 @@ function selectZone(id) {
     if (ptEl) ptEl.checked = true;
     const pgEl = document.getElementById("prop-gender-" + (zone.gender || "M"));
     if (pgEl) pgEl.checked = true;
-    document.getElementById("properties-panel").style.display = "block";
+    const panel = document.getElementById("properties-panel");
+    panel.style.display = "block";
+    panel.querySelector("h3").textContent = "Властивості зони";
     document.getElementById("delete-btn").style.display = "inline-block";
+    // Show resize handles
+    renderResizeHandles(zone);
   }
 }
 
 function clearSelection() {
+  // Remove handles from previously selected zone
+  if (selectedZoneId) removeResizeHandles(selectedZoneId);
   selectedZoneId = null;
   selectedGroupId = null;
   clearMultiSelect();
@@ -1116,10 +1265,23 @@ svg.addEventListener("click", (e) => {
 // UPDATE ZONE
 // ============================================================
 function updateSelectedZone() {
+  // Group editing via panel
+  if (selectedGroupId) {
+    const group = groups.find(g => g.id === selectedGroupId);
+    if (!group) return;
+    group.brand = document.getElementById("prop-brand").value || "Бренд";
+    group.sku = parseInt(document.getElementById("prop-sku").value) || 0;
+    group.ztype = document.querySelector('input[name="prop-type"]:checked')?.value || group.ztype || "S";
+    group.gender = document.querySelector('input[name="prop-gender"]:checked')?.value || group.gender || "M";
+    refreshGroupLabel(group);
+    renderSidebar();
+    renderSummary();
+    return;
+  }
   if (!selectedZoneId) return;
   const zone = zones.find(z => z.id === selectedZoneId);
   if (!zone) return;
-  zone.brand = document.getElementById("prop-brand").value || "Бренд";
+  zone.brand = document.getElementById("prop-brand").value || "";
   zone.sku = parseInt(document.getElementById("prop-sku").value) || 0;
   zone.ztype = document.querySelector('input[name="prop-type"]:checked')?.value || zone.ztype || "S";
   zone.gender = document.querySelector('input[name="prop-gender"]:checked')?.value || zone.gender || "M";
@@ -1129,6 +1291,19 @@ function updateSelectedZone() {
 }
 
 function updateSelectedZoneColor() {
+  if (selectedGroupId) {
+    const group = groups.find(g => g.id === selectedGroupId);
+    if (!group) return;
+    group.color = document.getElementById("prop-color").value;
+    group.zoneIds.forEach(id => {
+      const z = zones.find(z => z.id === id); if (z) z.color = group.color;
+      const el = document.getElementById(id);
+      if (el) { const r = el.querySelector(".zone-rect"); if (r) { r.setAttribute("fill", group.color); r.setAttribute("stroke", group.color); } }
+    });
+    refreshGroupLabel(group);
+    renderSidebar();
+    return;
+  }
   if (!selectedZoneId) return;
   const zone = zones.find(z => z.id === selectedZoneId);
   if (!zone) return;
@@ -1194,30 +1369,27 @@ function renderSidebar() {
 
   groups.forEach(group => {
     const isSelected = group.id === selectedGroupId;
-    const zoneObjs = group.zoneIds.map(id => zones.find(z => z.id === id)).filter(Boolean);
-    const totalSku = zoneObjs.reduce((s, z) => s + (z.sku || 0), 0);
     const typeLabel = group.ztype === "A" ? "Apparel" : "Shoes";
+    const gLabel = group.gender || "M";
     const wrapper = document.createElement("div");
-    wrapper.className = "group-item";
+    wrapper.className = "group-item" + (isSelected ? " selected" : "");
+    wrapper.style.cursor = "pointer";
+    wrapper.onclick = () => selectGroup(group.id);
     wrapper.innerHTML = `
-      <div class="group-header" onclick="selectGroup('${group.id}')">
+      <div class="group-header">
         <div class="zone-color-dot" style="background:${group.color}"></div>
         <div class="zone-info">
-          <div class="zone-brand">🔗 ${group.brand}</div>
-          <div class="zone-meta">
+          <div class="zone-brand">🔗 ${group.brand || "<em style='color:#546e7a'>без назви</em>"}</div>
+          <div class="zone-meta" style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;white-space:nowrap">
             <span class="badge badge-${group.ztype||'S'}">${typeLabel}</span>
-            <span class="badge badge-${group.gender||'M'}">${group.gender||'M'}</span>
-            ${totalSku > 0 ? totalSku + " арт." : ""}
-            <span style="color:#6272a4;margin-left:4px">${group.zoneIds.length} зон</span>
+            <span class="badge badge-${gLabel === 'MW' ? 'M' : gLabel}">${gLabel}</span>
+            <span style="color:#8892b0;font-size:10px">${group.sku||0} арт. · ${group.zoneIds.length} зон</span>
           </div>
         </div>
-        <span class="zone-delete" onclick="deleteGroupById('${group.id}', event)" title="Видалити групу">×</span>
-      </div>
-      <div class="group-zones">
-        ${zoneObjs.map(z => `<div class="group-zone-row">
-          <div class="group-zone-dot" style="background:${z.color}"></div>
-          <span>${z.brand} (${z.sku||0} арт.)</span>
-        </div>`).join("")}
+        <div style="display:flex;gap:4px;align-items:center">
+          <span style="cursor:pointer;color:#4fc3f7;font-size:13px;padding:2px 5px;border-radius:3px" onclick="editGroup('${group.id}',event)" title="Редагувати">✏️</span>
+          <span class="zone-delete" onclick="deleteGroupById('${group.id}', event)" title="Видалити групу">×</span>
+        </div>
       </div>
     `;
     list.appendChild(wrapper);
@@ -1375,42 +1547,139 @@ function buildSummaryData() {
 // ============================================================
 // GROUPS
 // ============================================================
+// Pending group IDs waiting for modal confirmation
+let _pendingGroupIds = [];
+let _modalGroupColor = "#ef5350";
+let _editingGroupId = null;
+
 function groupSelected() {
   if (selectedZoneIds.length < 2) return;
-  const ids = [...selectedZoneIds];
-  const zoneObjs = ids.map(id => zones.find(z => z.id === id)).filter(Boolean);
+  _pendingGroupIds = [...selectedZoneIds];
+  const zoneObjs = _pendingGroupIds.map(id => zones.find(z => z.id === id)).filter(Boolean);
   if (zoneObjs.length < 2) return;
 
-  // Use first zone's brand/type/gender/color as group defaults
-  const first = zoneObjs[0];
-  const totalSku = zoneObjs.reduce((s, z) => s + (z.sku || 0), 0);
-
-  const group = {
-    id: "g" + Date.now(),
-    zoneIds: ids,
-    brand: first.brand,
-    ztype: first.ztype || "S",
-    gender: first.gender || "M",
-    color: first.color,
-    sku: totalSku,
-    lx: undefined,
-    ly: undefined
-  };
-  groups.push(group);
-
-  // Remove individual labels & lines for grouped zones
-  ids.forEach(id => {
-    const lbl = document.getElementById(id + "-label");
-    if (lbl) lbl.remove();
-    const ln = document.getElementById(id + "-line");
-    if (ln) ln.remove();
+  // Pre-fill color from first zone
+  _modalGroupColor = zoneObjs[0].color;
+  // Update swatch selection
+  document.querySelectorAll(".modal-swatch").forEach(s => {
+    s.classList.toggle("active", s.dataset.color === _modalGroupColor);
   });
 
-  renderGroup(group);
+  // Show zone count
+  document.getElementById("modal-zone-count").textContent =
+    `Об'єднуєш ${zoneObjs.length} зон${zoneObjs.length > 4 ? "" : zoneObjs.length > 1 ? "и" : "у"}`;
+
+  // Auto-calculate SKU hint
+  const totalSku = zoneObjs.reduce((s, z) => s + (z.sku || 0), 0);
+  document.getElementById("modal-sku").value = totalSku || "";
+  document.getElementById("modal-sku-hint").textContent =
+    totalSku > 0 ? `Сума зон: ${totalSku} арт.` : "";
+
+  // Reset fields
+  document.getElementById("modal-brand").value = "";
+  document.querySelector('input[name="modal-type"][value="S"]').checked = true;
+  document.querySelector('input[name="modal-gender"][value="M"]').checked = true;
+
+  // Show modal
+  document.getElementById("group-modal-overlay").classList.add("visible");
+  setTimeout(() => document.getElementById("modal-brand").focus(), 50);
+}
+
+function closeGroupModal() {
+  document.getElementById("group-modal-overlay").classList.remove("visible");
+  _pendingGroupIds = [];
+  _editingGroupId = null;
+}
+
+function selectModalColor(el) {
+  document.querySelectorAll(".modal-swatch").forEach(s => s.classList.remove("active"));
+  el.classList.add("active");
+  _modalGroupColor = el.dataset.color;
+  // Update pending zone colors preview
+  _pendingGroupIds.forEach(id => {
+    const el2 = document.getElementById(id);
+    if (el2) el2.querySelector(".zone-rect")?.setAttribute("fill", _modalGroupColor);
+  });
+}
+
+function selectModalColorCustom(val) {
+  document.querySelectorAll(".modal-swatch").forEach(s => s.classList.remove("active"));
+  _modalGroupColor = val;
+}
+
+function confirmGroupModal() {
+  const brand = document.getElementById("modal-brand").value.trim() || "Бренд";
+  const sku = parseInt(document.getElementById("modal-sku").value) || 0;
+  const ztype = document.querySelector('input[name="modal-type"]:checked')?.value || "S";
+  const gender = document.querySelector('input[name="modal-gender"]:checked')?.value || "M";
+
+  if (_editingGroupId) {
+    // EDIT existing group
+    const group = groups.find(g => g.id === _editingGroupId);
+    if (group) {
+      group.brand = brand;
+      group.sku = sku;
+      group.ztype = ztype;
+      group.gender = gender;
+      group.color = _modalGroupColor;
+      // Update zone colors
+      group.zoneIds.forEach(id => {
+        const z = zones.find(z => z.id === id);
+        if (z) z.color = _modalGroupColor;
+        const el = document.getElementById(id);
+        if (el) {
+          const r = el.querySelector(".zone-rect");
+          if (r) { r.setAttribute("fill", _modalGroupColor); r.setAttribute("stroke", _modalGroupColor); }
+        }
+      });
+      refreshGroupLabel(group);
+    }
+    _editingGroupId = null;
+  } else {
+    // CREATE new group
+    const ids = [..._pendingGroupIds];
+    const zoneObjs = ids.map(id => zones.find(z => z.id === id)).filter(Boolean);
+    zoneObjs.forEach(z => {
+      z.color = _modalGroupColor;
+      const el = document.getElementById(z.id);
+      if (el) {
+        const r = el.querySelector(".zone-rect");
+        if (r) { r.setAttribute("fill", _modalGroupColor); r.setAttribute("stroke", _modalGroupColor); }
+      }
+    });
+    const group = {
+      id: "g" + Date.now(),
+      zoneIds: ids,
+      brand, ztype, gender,
+      color: _modalGroupColor,
+      sku,
+      lx: undefined, ly: undefined
+    };
+    groups.push(group);
+    ids.forEach(id => {
+      const lbl = document.getElementById(id + "-label"); if (lbl) lbl.remove();
+      const ln = document.getElementById(id + "-line"); if (ln) ln.remove();
+    });
+    renderGroup(group);
+  }
+
   clearMultiSelect();
   document.querySelectorAll(".zone-rect").forEach(r => r.classList.remove("multi-selected", "selected"));
+  closeGroupModal();
   renderSidebar();
+  renderSummary();
 }
+
+// Close modal on overlay click
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("group-modal-overlay").addEventListener("click", (e) => {
+    if (e.target === document.getElementById("group-modal-overlay")) closeGroupModal();
+  });
+  document.getElementById("modal-brand").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") confirmGroupModal();
+    if (e.key === "Escape") closeGroupModal();
+  });
+});
 
 function ungroupSelected() {
   if (!selectedGroupId) return;
@@ -1550,11 +1819,6 @@ function renderGroup(group) {
 
 function refreshGroupLabel(group) {
   removeGroupFromSVG(group.id);
-  // Recalculate SKU
-  group.sku = group.zoneIds.reduce((s, id) => {
-    const z = zones.find(z => z.id === id);
-    return s + (z ? (z.sku || 0) : 0);
-  }, 0);
   renderGroup(group);
 }
 
@@ -1562,7 +1826,6 @@ function selectGroup(gid) {
   clearMultiSelect();
   selectedZoneId = null;
   selectedGroupId = gid;
-  document.getElementById("properties-panel").style.display = "none";
   document.getElementById("delete-btn").style.display = "none";
   document.getElementById("ungroup-btn").style.display = "inline-block";
   document.getElementById("group-btn").style.display = "none";
@@ -1575,8 +1838,49 @@ function selectGroup(gid) {
       const el = document.getElementById(id);
       if (el) el.querySelector(".zone-rect")?.classList.add("multi-selected");
     });
+    // Show group properties in panel
+    showGroupPanel(group);
   }
   renderSidebar();
+}
+
+function showGroupPanel(group) {
+  document.getElementById("prop-brand").value = group.brand || "";
+  document.getElementById("prop-sku").value = group.sku || "";
+  document.getElementById("prop-color").value = group.color;
+  const ptEl = document.getElementById("prop-type-" + (group.ztype || "S"));
+  if (ptEl) ptEl.checked = true;
+  const pgEl = document.getElementById("prop-gender-" + (group.gender || "M"));
+  if (pgEl) pgEl.checked = true;
+  const panel = document.getElementById("properties-panel");
+  panel.style.display = "block";
+  panel.querySelector("h3").textContent = "Властивості групи";
+}
+
+function editGroup(gid, e) {
+  e && e.stopPropagation();
+  const group = groups.find(g => g.id === gid);
+  if (!group) return;
+
+  // Pre-fill modal
+  _pendingGroupIds = [...group.zoneIds];
+  _modalGroupColor = group.color;
+  _editingGroupId = gid;
+
+  document.getElementById("modal-brand").value = group.brand || "";
+  document.getElementById("modal-sku").value = group.sku || "";
+  const typeEl = document.querySelector(`input[name="modal-type"][value="${group.ztype||'S'}"]`);
+  if (typeEl) typeEl.checked = true;
+  const genderEl = document.querySelector(`input[name="modal-gender"][value="${group.gender||'M'}"]`);
+  if (genderEl) genderEl.checked = true;
+  document.querySelectorAll(".modal-swatch").forEach(s => {
+    s.classList.toggle("active", s.dataset.color === _modalGroupColor);
+  });
+  document.getElementById("modal-zone-count").textContent =
+    `Редагуєш групу (${group.zoneIds.length} зон)`;
+  document.getElementById("modal-sku-hint").textContent = "";
+  document.getElementById("group-modal-overlay").classList.add("visible");
+  setTimeout(() => document.getElementById("modal-brand").focus(), 50);
 }
 
 // ============================================================
@@ -1961,6 +2265,106 @@ async function exportPDF() {
 }
 
 // ============================================================
+// RESIZE HANDLES
+// ============================================================
+const HANDLE_SIZE = 7; // half-size of handle square
+
+function renderResizeHandles(zone) {
+  removeResizeHandles(zone.id);
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  g.setAttribute("id", zone.id + "-handles");
+  g.setAttribute("class", "handles-group");
+
+  const { x, y, w, h } = zone;
+  const cx = x + w/2, cy = y + h/2;
+  const hs = HANDLE_SIZE;
+
+  const handles = [
+    { id: "corner-nw", cx: x,    cy: y,    cursor: "nwse-resize" },
+    { id: "edge-n",    cx: cx,   cy: y,    cursor: "ns-resize" },
+    { id: "corner-ne", cx: x+w,  cy: y,    cursor: "nesw-resize" },
+    { id: "edge-e",    cx: x+w,  cy: cy,   cursor: "ew-resize" },
+    { id: "corner-se", cx: x+w,  cy: y+h,  cursor: "nwse-resize" },
+    { id: "edge-s",    cx: cx,   cy: y+h,  cursor: "ns-resize" },
+    { id: "corner-sw", cx: x,    cy: y+h,  cursor: "nesw-resize" },
+    { id: "edge-w",    cx: x,    cy: cy,   cursor: "ew-resize" },
+  ];
+
+  handles.forEach(hd => {
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("class", "resize-handle " + hd.id);
+    rect.setAttribute("x", hd.cx - hs);
+    rect.setAttribute("y", hd.cy - hs);
+    rect.setAttribute("width", hs * 2);
+    rect.setAttribute("height", hs * 2);
+    rect.setAttribute("rx", 2);
+    rect.style.cursor = hd.cursor;
+
+    // Direct mousedown on each handle — most reliable approach
+    rect.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const startCoords = getSVGCoords(e);
+      const origX = zone.x, origY = zone.y, origW = zone.w, origH = zone.h;
+      const MIN = 20;
+
+      function onMove(ev) {
+        const cur = getWindowSVGCoords(ev);
+        const dx = cur.x - startCoords.x;
+        const dy = cur.y - startCoords.y;
+        let nx = origX, ny = origY, nw = origW, nh = origH;
+
+        if (hd.id.includes("e"))  nw = Math.max(MIN, origW + dx);
+        if (hd.id.includes("s"))  nh = Math.max(MIN, origH + dy);
+        if (hd.id.includes("w")) { const dw = Math.min(origW - MIN, dx); nx = origX + dw; nw = origW - dw; }
+        if (hd.id.includes("n")) { const dh = Math.min(origH - MIN, dy); ny = origY + dh; nh = origH - dh; }
+
+        zone.x = nx; zone.y = ny; zone.w = nw; zone.h = nh;
+
+        // Live update rect
+        const zoneEl = document.getElementById(zone.id);
+        if (zoneEl) {
+          const r = zoneEl.querySelector(".zone-rect");
+          if (r) { r.setAttribute("x", nx); r.setAttribute("y", ny); r.setAttribute("width", nw); r.setAttribute("height", nh); }
+        }
+        // Update connector line origin
+        const lineEl = document.getElementById(zone.id + "-line");
+        if (lineEl) { lineEl.setAttribute("x1", nx + nw/2); lineEl.setAttribute("y1", ny + nh/2); }
+        // Update handles position live
+        renderResizeHandles(zone);
+      }
+
+      function onUp() {
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+        // Full refresh: reposition label
+        zone.lx = undefined; zone.ly = undefined;
+        refreshZone(zone);
+        renderResizeHandles(zone);
+      }
+
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    });
+
+    g.appendChild(rect);
+  });
+
+  svg.appendChild(g);
+}
+
+function removeResizeHandles(zoneId) {
+  const el = document.getElementById(zoneId + "-handles");
+  if (el) el.remove();
+}
+
+function updateResizeHandles(zone) {
+  removeResizeHandles(zone.id);
+  if (selectedZoneId === zone.id) renderResizeHandles(zone);
+}
+
+
+// ============================================================
 // DRAG ZONE (move existing) + DRAG LABEL
 // ============================================================
 let dragState = null;
@@ -2064,6 +2468,15 @@ svg.addEventListener("mousemove", (e) => {
 });
 
 svg.addEventListener("mouseup", () => {
+  if (dragState && dragState.type === "resize") {
+    const zone = zones.find(z => z.id === dragState.zoneId);
+    if (zone) {
+      // Full refresh after resize complete (updates label position)
+      zone.lx = undefined; zone.ly = undefined; // reset label to new default pos
+      refreshZone(zone);
+      renderResizeHandles(zone);
+    }
+  }
   dragState = null;
 });
 
@@ -2151,6 +2564,162 @@ uploadBox.addEventListener("drop", (e) => {
     loadImageToCanvas(URL.createObjectURL(file));
   }
 });
+
+// ============================================================
+// SIDEBAR RESIZE
+// ============================================================
+(function() {
+  const sidebar = document.getElementById("sidebar");
+  const zonesWrap = document.getElementById("zones-list-wrap");
+  const summarySection = document.getElementById("summary-section");
+  const propsPanel = document.getElementById("properties-panel");
+
+  // Init panel sizes
+  function initPanelSizes() {
+    if (zonesWrap) {
+      zonesWrap.style.flex = "1 1 auto";
+      zonesWrap.style.minHeight = "40px";
+      zonesWrap.style.overflowY = "auto";
+    }
+    if (summarySection) {
+      summarySection.style.flex = "0 0 auto";
+      summarySection.style.height = "32px";
+    }
+    if (propsPanel) {
+      propsPanel.style.flex = "0 0 auto";
+      propsPanel.style.overflowY = "auto";
+    }
+  }
+  initPanelSizes();
+
+  // Generic panel resizer — attaches to window to avoid pointer-events issues
+  function attachResizer(resizerId, onDrag) {
+    const el = document.getElementById(resizerId);
+    if (!el) return;
+    // Use both mousedown on element AND a click-zone approach
+    el.style.pointerEvents = "all";
+    el.onmousedown = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.add("dragging");
+      const startY = e.clientY;
+      let lastY = startY;
+      function onMove(ev) {
+        const dy = ev.clientY - lastY;
+        lastY = ev.clientY;
+        onDrag(dy);
+      }
+      function onUp() {
+        el.classList.remove("dragging");
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      }
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    };
+  }
+
+  // Summary resizer: drag down = taller summary
+  attachResizer("summary-resizer", (dy) => {
+    if (!summarySection) return;
+    const cur = parseInt(summarySection.style.height) || summarySection.offsetHeight;
+    summarySection.style.height = Math.max(32, Math.min(400, cur + dy)) + "px";
+  });
+
+  // Props resizer: drag down = taller props
+  attachResizer("props-resizer", (dy) => {
+    if (!propsPanel) return;
+    const cur = parseInt(propsPanel.style.height) || propsPanel.offsetHeight;
+    propsPanel.style.height = Math.max(40, Math.min(500, cur + dy)) + "px";
+  });
+
+  // Sidebar width resizer
+
+  // ── Sidebar width resizer ──────────────────────────────────
+  const sidebarResizer = document.getElementById("sidebar-resizer");
+  if (sidebarResizer && sidebar) {
+    sidebarResizer.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      sidebarResizer.classList.add("dragging");
+      const startX = e.clientX;
+      const startW = sidebar.offsetWidth;
+      function onMove(ev) {
+        const newW = Math.max(180, Math.min(600, startW + (startX - ev.clientX)));
+        sidebar.style.width = newW + "px";
+      }
+      function onUp() {
+        sidebarResizer.classList.remove("dragging");
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      }
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    });
+  }
+
+
+})();
+
+
 </script>
+
+<!-- Group info modal -->
+<div id="group-modal-overlay">
+  <div id="group-modal">
+    <h2>🔗 Налаштування групи</h2>
+    <div class="modal-zone-count" id="modal-zone-count"></div>
+    <div class="modal-row">
+      <div class="modal-label">Бренд</div>
+      <input type="text" class="modal-input" id="modal-brand" placeholder="Nike" list="modal-brand-list">
+      <datalist id="modal-brand-list">
+        <option value="Adidas"><option value="Nike"><option value="Puma">
+        <option value="New Balance"><option value="Columbia"><option value="Reebok">
+        <option value="Skechers"><option value="Camel"><option value="Salomon">
+        <option value="Hoka"><option value="The North Face"><option value="Jack Wolfskin">
+      </datalist>
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">Артикули (SKU)</div>
+      <input type="number" class="modal-input" id="modal-sku" placeholder="0" min="0">
+      <div style="font-size:11px;color:#6272a4;margin-top:3px" id="modal-sku-hint"></div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">Тип</div>
+      <div class="modal-radio-row">
+        <label><input type="radio" name="modal-type" value="S" checked> 👟 Shoes</label>
+        <label><input type="radio" name="modal-type" value="A"> 👕 Apparel</label>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">Стать</div>
+      <div class="modal-radio-row">
+        <label><input type="radio" name="modal-gender" value="M" checked> M</label>
+        <label><input type="radio" name="modal-gender" value="W"> W</label>
+        <label><input type="radio" name="modal-gender" value="MW"> M+W</label>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">Колір групи</div>
+      <div class="modal-color-row" id="modal-color-swatches">
+        <div class="modal-swatch active" style="background:#ef5350" data-color="#ef5350" onclick="selectModalColor(this)"></div>
+        <div class="modal-swatch" style="background:#42a5f5" data-color="#42a5f5" onclick="selectModalColor(this)"></div>
+        <div class="modal-swatch" style="background:#66bb6a" data-color="#66bb6a" onclick="selectModalColor(this)"></div>
+        <div class="modal-swatch" style="background:#ffa726" data-color="#ffa726" onclick="selectModalColor(this)"></div>
+        <div class="modal-swatch" style="background:#ab47bc" data-color="#ab47bc" onclick="selectModalColor(this)"></div>
+        <div class="modal-swatch" style="background:#26c6da" data-color="#26c6da" onclick="selectModalColor(this)"></div>
+        <div class="modal-swatch" style="background:#ffca28" data-color="#ffca28" onclick="selectModalColor(this)"></div>
+        <div class="modal-swatch" style="background:#ec407a" data-color="#ec407a" onclick="selectModalColor(this)"></div>
+        <div class="modal-swatch" style="background:#8d6e63" data-color="#8d6e63" onclick="selectModalColor(this)"></div>
+        <input type="color" style="width:26px;height:26px;border-radius:5px;cursor:pointer;border:2px dashed #8892b0;padding:0;background:transparent" title="Власний" onchange="selectModalColorCustom(this.value)">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeGroupModal()">Скасувати</button>
+      <button class="btn primary" onclick="confirmGroupModal()">✓ Створити групу</button>
+    </div>
+  </div>
+</div>
+
+
 </body>
 </html>
